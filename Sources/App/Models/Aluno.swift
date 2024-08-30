@@ -1,4 +1,5 @@
 import Foundation
+import BSON
 import Vapor
 import Fluent
 

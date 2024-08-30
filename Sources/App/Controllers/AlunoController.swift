@@ -1,10 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by Daniel Lopes da Silva on 28/08/24.
-//
-
 import Foundation
 import Vapor
 
@@ -18,21 +11,21 @@ struct AlunoController: RouteCollection {
         }
     }
 
-    func index(req: Request) throws -> EventLoopFuture<[Aluno]> {
-        return Aluno.query(on: req.db).all()
+    func index(req: Request) async throws -> [Aluno] {
+        return try await Aluno.query(on: req.db).all()
     }
 
-    func create(req: Request) throws -> EventLoopFuture<Aluno> {
+    func create(req: Request) async throws -> Aluno {
         let aluno = try req.content.decode(Aluno.self)
-        return aluno.save(on: req.db).map { aluno }
+        try await aluno.save(on: req.db)
+        return aluno
     }
 
-    func delete(req: Request) throws -> EventLoopFuture<HTTPStatus> {
-        return Aluno.find(req.parameters.get("alunoID"), on: req.db)
-            .unwrap(or: Abort(.notFound))
-            .flatMap { aluno in
-                aluno.delete(on: req.db)
-            }
-            .transform(to: .ok)
+    func delete(req: Request) async throws -> HTTPStatus {
+        guard let aluno = try await Aluno.find(req.parameters.get("alunoID"), on: req.db) else {
+            throw Abort(.notFound)
+        }
+        try await aluno.delete(on: req.db)
+        return .ok
     }
 }
